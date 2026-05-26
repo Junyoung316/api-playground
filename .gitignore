@@ -8,6 +8,8 @@ build/
 /docker/**
 /docker
 
+git-command.md
+
 ### STS ###
 .apt_generated
 .classpath
