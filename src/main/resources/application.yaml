@@ -20,3 +20,7 @@ spring:
     redis:
       host: localhost
       port: 6379
+      password: ${REDIS_PASSWORD}
+
+url-shortener:
+  expire-days: 30
