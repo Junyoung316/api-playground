@@ -361,3 +361,113 @@ curl http://localhost:8080/api/memos/9999
 - PUT / PATCH 메서드 분리로 전체 수정 / 부분 수정 구현
 - 더티 체킹을 이용한 수정 처리 (save() 호출 불필요)
 - Spring Data JPA Pageable을 이용한 페이징 처리
+
+<hr>
+
+# Lotto
+
+## 개요
+
+1~45 사이의 숫자 중 중복 없이 6개를 랜덤으로 추출하는 로또 번호 생성 서비스입니다.
+생성된 번호는 데이터베이스에 저장되며 이력 조회를 지원합니다.
+
+## 기술 스택
+
+| 기술 | 용도 |
+|---|---|
+| MySQL | 로또 번호 생성 이력 영구 저장 |
+
+## 저장소 설계
+
+**MySQL**
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | BIGINT | 기본키 |
+| numbers | VARCHAR | 로또 번호 (문자열로 저장, 예: "3,7,15,23,38,41") |
+| created_at | DATETIME | 생성일 |
+
+## 주요 구현 사항
+
+- `Collections.shuffle()`을 이용한 랜덤 번호 추출
+- `@Converter`를 이용한 `List<Integer>` ↔ 문자열 변환
+- Spring Data JPA Pageable을 이용한 페이징 처리
+
+### IntegerListConverter
+
+`List<Integer>`를 MySQL에 문자열로 저장하고 조회 시 다시 `List<Integer>`로 변환합니다.
+
+```
+저장 시 : [3, 7, 15, 23, 38, 41] → "3,7,15,23,38,41"
+조회 시 : "3,7,15,23,38,41" → [3, 7, 15, 23, 38, 41]
+```
+
+## API 명세
+
+### 로또 번호 생성
+
+```
+POST /api/lotto/generate
+```
+
+**Response**
+```json
+{
+    "code": "SUCCESS",
+    "message": "성공",
+    "data": {
+        "numbers": [3, 7, 15, 23, 38, 41]
+    }
+}
+```
+
+---
+
+### 로또 번호 생성 이력 조회
+
+```
+GET /api/lotto/history?page=0&size=10
+```
+
+**Query Parameter**
+
+| 파라미터 | 필수 여부 | 설명 |
+|---|---|---|
+| page | 선택 | 페이지 번호 (기본값 0) |
+| size | 선택 | 페이지 크기 (기본값 10) |
+
+**Response**
+```json
+{
+    "code": "SUCCESS",
+    "message": "성공",
+    "data": {
+        "content": [
+            {
+                "id": 1,
+                "numbers": [3, 7, 15, 23, 38, 41],
+                "createdAt": "2026-05-27T00:00:00"
+            }
+        ],
+        "totalElements": 1,
+        "totalPages": 1,
+        "size": 10,
+        "number": 0
+    }
+}
+```
+
+---
+
+## curl 테스트
+
+```bash
+# 로또 번호 생성
+curl -X POST http://localhost:8080/api/lotto/generate
+
+# 이력 조회
+curl http://localhost:8080/api/lotto/history
+
+# 이력 조회 (페이징)
+curl "http://localhost:8080/api/lotto/history?page=0&size=10"
+```

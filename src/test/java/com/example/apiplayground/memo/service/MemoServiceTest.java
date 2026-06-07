@@ -4,6 +4,7 @@ import com.example.apiplayground.common.exception.BusinessException;
 import com.example.apiplayground.common.exception.ErrorCode;
 import com.example.apiplayground.memo.domain.Memo;
 import com.example.apiplayground.memo.dto.request.MemoCreateRequest;
+import com.example.apiplayground.memo.dto.request.MemoPatchRequest;
 import com.example.apiplayground.memo.dto.request.MemoUpdateRequest;
 import com.example.apiplayground.memo.dto.response.MemoDetailResponse;
 import com.example.apiplayground.memo.dto.response.MemoListResponse;
