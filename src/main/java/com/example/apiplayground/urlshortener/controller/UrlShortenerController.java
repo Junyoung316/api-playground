@@ -27,7 +27,7 @@ public class UrlShortenerController {
     }
 
     @GetMapping("/s/{code}")
-    public ResponseEntity<ApiResponse<?>> getShortenedUrl(@PathVariable String code) {
+    public ResponseEntity<ApiResponse<Void>> getShortenedUrl(@PathVariable String code) {
         String originalUrl = urlShortenerService.getOriginalUrl(code);
 
         return ResponseEntity.status(HttpStatus.FOUND)
@@ -46,9 +46,3 @@ public class UrlShortenerController {
         return ResponseEntity.ok().body(ApiResponse.success(null));
     }
 }
-/*
- * POST   /api/shorten          긴 URL 받아서 단축 코드 반환
- * GET    /api/s/{code}             단축 코드로 원본 URL로 redirect (302)
- * GET    /api/stats/{code}     조회수, 생성일, 원본 URL 조회
- * DELETE /api/shorten/{code}   삭제
- */

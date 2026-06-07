@@ -31,6 +31,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 
     implementation("org.apache.commons:commons-lang3:3.20.0")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 }
 
 tasks.withType<Test> {
