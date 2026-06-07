@@ -471,3 +471,153 @@ curl http://localhost:8080/api/lotto/history
 # 이력 조회 (페이징)
 curl "http://localhost:8080/api/lotto/history?page=0&size=10"
 ```
+
+<hr>
+
+# BMI Calculator
+
+## 개요
+
+키와 몸무게를 입력받아 BMI를 계산하고 비만 단계를 반환하는 서비스입니다.
+계산 결과는 데이터베이스에 저장되며 이력 조회를 지원합니다.
+
+## 기술 스택
+
+| 기술 | 용도 |
+|---|---|
+| MySQL | BMI 계산 이력 영구 저장 |
+
+## 저장소 설계
+
+**MySQL**
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | BIGINT | 기본키 |
+| height | DOUBLE | 키 (cm) |
+| weight | DOUBLE | 몸무게 (kg) |
+| bmi | DOUBLE | BMI 수치 |
+| status | VARCHAR | 비만 단계 (UNDERWEIGHT, NORMAL, OVERWEIGHT, OBESE) |
+| created_at | DATETIME | 생성일 |
+
+## BMI 계산 공식
+
+```
+BMI = 체중(kg) / (키(m) * 키(m))
+```
+
+## 비만 단계
+
+| 단계 | BMI 범위 | 설명 |
+|---|---|---|
+| 저체중 | BMI < 18.5 | UNDERWEIGHT |
+| 정상 | 18.5 <= BMI < 23 | NORMAL |
+| 과체중 | 23 <= BMI < 25 | OVERWEIGHT |
+| 비만 | BMI >= 25 | OBESE |
+
+## API 명세
+
+### BMI 계산
+
+```
+POST /api/bmi/calculate
+```
+
+**Request Body**
+```json
+{
+    "height": 175.0,
+    "weight": 70.0
+}
+```
+
+**Response**
+```json
+{
+    "code": "SUCCESS",
+    "message": "성공",
+    "data": {
+        "bmi": 22.86,
+        "status": "정상"
+    }
+}
+```
+
+---
+
+### BMI 이력 조회
+
+```
+GET /api/bmi/history?page=0&size=10
+```
+
+**Query Parameter**
+
+| 파라미터 | 필수 여부 | 설명 |
+|---|---|---|
+| page | 선택 | 페이지 번호 (기본값 0) |
+| size | 선택 | 페이지 크기 (기본값 10) |
+
+**Response**
+```json
+{
+    "code": "SUCCESS",
+    "message": "성공",
+    "data": {
+        "content": [
+            {
+                "id": 1,
+                "height": 175.0,
+                "weight": 70.0,
+                "bmi": 22.86,
+                "status": "정상",
+                "createdAt": "2026-05-27T00:00:00"
+            }
+        ],
+        "totalElements": 1,
+        "totalPages": 1,
+        "size": 10,
+        "number": 0
+    }
+}
+```
+
+---
+
+## curl 테스트
+
+```bash
+# BMI 계산
+curl -X POST http://localhost:8080/api/bmi/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"height": 175.0, "weight": 70.0}'
+
+# 저체중 케이스
+curl -X POST http://localhost:8080/api/bmi/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"height": 175.0, "weight": 50.0}'
+
+# 과체중 케이스
+curl -X POST http://localhost:8080/api/bmi/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"height": 175.0, "weight": 80.0}'
+
+# 비만 케이스
+curl -X POST http://localhost:8080/api/bmi/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"height": 175.0, "weight": 100.0}'
+
+# 이력 조회
+curl http://localhost:8080/api/bmi/history
+
+# 이력 조회 (페이징)
+curl "http://localhost:8080/api/bmi/history?page=0&size=10"
+```
+
+## 주요 구현 사항
+
+- BMI 계산 공식을 이용한 수치 계산
+- `BmiStatus` enum의 정적 팩토리 메서드 `from()`을 이용한 비만 단계 판별
+- enum에 한글 description 필드를 추가해 사용자 친화적인 응답 반환
+- `@Enumerated(EnumType.STRING)`을 이용한 enum 문자열 저장
+- Spring Data JPA Pageable을 이용한 페이징 처리
